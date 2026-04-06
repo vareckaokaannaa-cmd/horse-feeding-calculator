@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Калькулятор плана питания лошади</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      color: #222;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin: 8px 0 0;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #cfd5e2;
+      font-size: 15px;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #5a7cff;
+      box-shadow: 0 0 0 3px rgba(90, 124, 255, 0.15);
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #5a7cff;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #4769ec;
+    }
+
+    .btn-secondary {
+      background: #eef2ff;
+      color: #2e4bc6;
+      margin-top: 8px;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e8ff;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .result-box {
+      background: #f8fafc;
+      border: 1px solid #dbe3f0;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e8edf5;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-label {
+      font-weight: 600;
+    }
+
+    .note {
+      font-size: 14px;
+      color: #4f5b6d;
+      margin-top: 12px;
+    }
+
+    .error {
+      color: #c62828;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
+    .success {
+      color: #1b5e20;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
+    .measure-image-wrap {
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .measure-image-wrap img {
+      max-width: 100%;
+      border-radius: 12px;
+      border: 1px solid #dbe3f0;
+      background: #fff;
+    }
+
+    .small-text {
+      font-size: 14px;
+      color: #667085;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Калькулятор плана питания лошади</h1>
+      <p>
+        Калькулятор рассчитывает массу лошади, суточную норму сухого вещества,
+        а также ориентировочное количество сена и овса в сутки.
+      </p>
+      <p class="small-text">
+        Схема расчёта: 80 % фуража и 20 % концентратов; сено — 80 % сухого вещества, овёс — 86 %.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>1. Категория лошади</h2>
+      <div class="grid grid-2">
+        <div>
+          <label for="category">Выберите категорию</label>
+          <select id="category">
+            <option value="">-- выберите --</option>
+            <option value="stallion">Жеребец-производитель</option>
+            <option value="mare">Кобыла</option>
+            <option value="working">Рабочая лошадь</option>
+            <option value="young">Молодняк</option>
+          </select>
+        </div>
+
+        <div id="stallionBox" class="hidden">
+          <label for="stallionState">Состояние жеребца</label>
+          <select id="stallionState">
+            <option value="2.5">Предслучной и случной период</option>
+            <option value="2.2">Неслучной период</option>
+          </select>
+        </div>
+
+        <div id="mareBox" class="hidden">
+          <label for="mareState">Состояние кобылы</label>
+          <select id="mareState">
+            <option value="2.2">Нежерёбая</option>
+            <option value="2.5">Жерёбая</option>
+            <option value="3.0">Подсосная</option>
+          </select>
+        </div>
+
+        <div id="workingBox" class="hidden">
+          <label for="workingState">Нагрузка</label>
+          <select id="workingState">
+            <option value="2.2">Без работы</option>
+            <option value="2.5">Лёгкая работа</option>
+            <option value="2.8">Средняя работа</option>
+            <option value="3.0">Тяжёлая работа</option>
+          </select>
+        </div>
+
+        <div id="youngAgeBox" class="hidden">
+          <label for="youngAge">Возраст молодняка</label>
+          <select id="youngAge">
+            <option value="">-- выберите возраст --</option>
+            <option value="6_12">6–12 месяцев</option>
+            <option value="12_18">12–18 месяцев</option>
+            <option value="18_24">18–24 месяца</option>
+            <option value="2_3">2–3 года</option>
+          </select>
+        </div>
+
+        <div id="youngTypeBox" class="hidden">
+          <label for="youngType">Группа молодняка</label>
+          <select id="youngType">
+            <option value="">-- выберите группу --</option>
+            <option value="riding_trotting">Рысистые и верховые породы</option>
+            <option value="heavy">Тяжеловозные породы</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Масса лошади</h2>
+
+      <div id="adultMassBox">
+        <div class="grid grid-2">
+          <div>
+            <label for="massMode">Способ задания массы</label>
+            <select id="massMode">
+              <option value="manual">Ввести массу вручную</option>
+              <option value="measurements">Рассчитать по промерам</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="manualMassWrap" class="grid grid-2" style="margin-top: 16px;">
+          <div>
+            <label for="manualMass">Масса лошади, кг</label>
+            <input id="manualMass" type="number" min="1" step="0.1" placeholder="Например, 500" />
+          </div>
+        </div>
+
+        <div id="measurementWrap" class="hidden" style="margin-top: 16px;">
+          <div class="grid grid-2">
+            <div>
+              <label for="horseType">Тип лошади для формулы массы</label>
+              <select id="horseType">
+                <option value="heavy">Тяжеловоз</option>
+                <option value="riding">Верховая</option>
+                <option value="light_harness">Легкоупряжная / рысистая</option>
+              </select>
+            </div>
+
+            <div>
+              <label>&nbsp;</label>
+              <button type="button" class="btn-secondary" id="toggleImageBtn">
+                Показать / скрыть схему измерений
+              </button>
+            </div>
+
+            <div>
+              <label for="lengthL">L — длина лошади, см</label>
+              <input id="lengthL" type="number" min="1" step="0.1" placeholder="Например, 160" />
+            </div>
+
+            <div>
+              <label for="chestV">V — обхват груди, см</label>
+              <input id="chestV" type="number" min="1" step="0.1" placeholder="Например, 190" />
+            </div>
+          </div>
+
+          <div id="imageWrap" class="measure-image-wrap hidden">
+            <p><strong>L</strong> — длина лошади, <strong>V</strong> — обхват груди</p>
+            <img src="horse-measure.png" alt="Схема измерения лошади" />
+          </div>
+        </div>
+      </div>
+
+      <div id="youngMassInfo" class="hidden success"></div>
+    </div>
+
+    <div class="card">
+      <h2>3. Результат</h2>
+      <button type="button" class="btn-primary" id="calculateBtn">Рассчитать</button>
+
+      <div id="errorBox" class="error hidden"></div>
+
+      <div id="resultBox" class="result-box hidden" style="margin-top: 16px;">
+        <div class="result-row">
+          <div class="result-label">Категория</div>
+          <div id="resultCategory"></div>
+        </div>
+        <div class="result-row">
+          <div class="result-label">Масса лошади</div>
+          <div id="resultMass"></div>
+        </div>
+        <div class="result-row">
+          <div class="result-label">E (сухое вещество на 100 кг живой массы)</div>
+          <div id="resultE"></div>
+        </div>
+        <div class="result-row">
+          <div class="result-label">Суточная потребность в сухом веществе (D)</div>
+          <div id="resultD"></div>
+        </div>
+        <div class="result-row">
+          <div class="result-label">Сено в сутки</div>
+          <div id="resultHay"></div>
+        </div>
+        <div class="result-row">
+          <div class="result-label">Овёс в сутки</div>
+          <div id="resultOats"></div>
+        </div>
+
+        <div class="note">
+          Расчёт ориентировочный. Он не заменяет консультацию ветеринара, зоотехника или специалиста по кормлению.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DRY_MATTER_HAY = 0.80;
+    const DRY_MATTER_OATS = 0.86;
+    const FRACTION_FORAGE = 0.80;
+    const FRACTION_CONCENTRATES = 0.20;
+
+    const YOUNG_E = {
+      "6_12": 3.0,
+      "12_18": 2.85,
+      "18_24": 2.6,
+      "2_3": 2.5
+    };
+
+    const YOUNG_MASS = {
+      "riding_trotting": {
+        "6_12": 250,
+        "12_18": 350,
+        "18_24": 400,
+        "2_3": 500
+      },
+      "heavy": {
+        "6_12": 350,
+        "12_18": 500,
+        "18_24": 600,
+        "2_3": 700
+      }
+    };
+
+    const category = document.getElementById("category");
+    const stallionBox = document.getElementById("stallionBox");
+    const mareBox = document.getElementById("mareBox");
+    const workingBox = document.getElementById("workingBox");
+    const youngAgeBox = document.getElementById("youngAgeBox");
+    const youngTypeBox = document.getElementById("youngTypeBox");
+    const adultMassBox = document.getElementById("adultMassBox");
+    const youngMassInfo = document.getElementById("youngMassInfo");
+
+    const massMode = document.getElementById("massMode");
+    const manualMassWrap = document.getElementById("manualMassWrap");
+    const measurementWrap = document.getElementById("measurementWrap");
+
+    const toggleImageBtn = document.getElementById("toggleImageBtn");
+    const imageWrap = document.getElementById("imageWrap");
+
+    const calculateBtn = document.getElementById("calculateBtn");
+    const errorBox = document.getElementById("errorBox");
+    const resultBox = document.getElementById("resultBox");
+
+    function hideAllCategoryBoxes() {
+      stallionBox.classList.add("hidden");
+      mareBox.classList.add("hidden");
+      workingBox.classList.add("hidden");
+      youngAgeBox.classList.add("hidden");
+      youngTypeBox.classList.add("hidden");
+    }
+
+    function updateCategoryUI() {
+      hideAllCategoryBoxes();
+      youngMassInfo.classList.add("hidden");
+      youngMassInfo.textContent = "";
+
+      const value = category.value;
+
+      if (value === "stallion") {
+        stallionBox.classList.remove("hidden");
+        adultMassBox.classList.remove("hidden");
+      } else if (value === "mare") {
+        mareBox.classList.remove("hidden");
+        adultMassBox.classList.remove("hidden");
+      } else if (value === "working") {
+        workingBox.classList.remove("hidden");
+        adultMassBox.classList.remove("hidden");
+      } else if (value === "young") {
+        youngAgeBox.classList.remove("hidden");
+        youngTypeBox.classList.remove("hidden");
+        adultMassBox.classList.add("hidden");
+      } else {
+        adultMassBox.classList.remove("hidden");
+      }
+    }
+
+    function updateMassModeUI() {
+      if (massMode.value === "manual") {
+        manualMassWrap.classList.remove("hidden");
+        measurementWrap.classList.add("hidden");
+      } else {
+        manualMassWrap.classList.add("hidden");
+        measurementWrap.classList.remove("hidden");
+      }
+    }
+
+    function calculateMassByMeasurements(lengthCm, chestCm, horseType) {
+      let k;
+
+      if (horseType === "heavy") {
+        k = 3.5;
+      } else if (horseType === "riding" || horseType === "light_harness") {
+        k = 3.0;
+      } else {
+        throw new Error("Неизвестный тип лошади.");
+      }
+
+      const mass = (((chestCm ** 2) * lengthCm / 10000) + (chestCm * k) + 6 * chestCm - 620) / 3;
+      return round2(mass);
+    }
+
+    function calculateD(eValue, massKg) {
+      return round2((eValue * massKg) / 100);
+    }
+
+    function calculateFeedMasses(dryMatterKg) {
+      const hayKg = round2((dryMatterKg * FRACTION_FORAGE) / DRY_MATTER_HAY);
+      const oatsKg = round2((dryMatterKg * FRACTION_CONCENTRATES) / DRY_MATTER_OATS);
+      return { hayKg, oatsKg };
+    }
+
+    function round2(value) {
+      return Math.round(value * 100) / 100;
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.classList.remove("hidden");
+      resultBox.classList.add("hidden");
+    }
+
+    function clearError() {
+      errorBox.textContent = "";
+      errorBox.classList.add("hidden");
+    }
+
+    function getAdultMass() {
+      const mode = massMode.value;
+
+      if (mode === "manual") {
+        const mass = parseFloat(document.getElementById("manualMass").value);
+        if (!mass || mass <= 0) {
+          throw new Error("Введите корректную массу лошади.");
+        }
+        return round2(mass);
+      }
+
+      const lengthL = parseFloat(document.getElementById("lengthL").value);
+      const chestV = parseFloat(document.getElementById("chestV").value);
+      const horseType = document.getElementById("horseType").value;
+
+      if (!lengthL || lengthL <= 0) {
+        throw new Error("Введите корректную длину лошади L.");
+      }
+      if (!chestV || chestV <= 0) {
+        throw new Error("Введите корректный обхват груди V.");
+      }
+
+      return calculateMassByMeasurements(lengthL, chestV, horseType);
+    }
+
+    function getYoungMassAndE() {
+      const age = document.getElementById("youngAge").value;
+      const type = document.getElementById("youngType").value;
+
+      if (!age) {
+        throw new Error("Выберите возраст молодняка.");
+      }
+      if (!type) {
+        throw new Error("Выберите группу молодняка.");
+      }
+
+      const eValue = YOUNG_E[age];
+      const massKg = YOUNG_MASS[type][age];
+
+      return { age, type, eValue, massKg };
+    }
+
+    function getCategoryData() {
+      const value = category.value;
+
+      if (!value) {
+        throw new Error("Выберите категорию лошади.");
+      }
+
+      if (value === "stallion") {
+        const eValue = parseFloat(document.getElementById("stallionState").value);
+        const label = document.getElementById("stallionState").selectedOptions[0].text;
+        const massKg = getAdultMass();
+        return {
+          categoryLabel: "Жеребец-производитель: " + label,
+          eValue,
+          massKg
+        };
+      }
+
+      if (value === "mare") {
+        const eValue = parseFloat(document.getElementById("mareState").value);
+        const label = document.getElementById("mareState").selectedOptions[0].text;
+        const massKg = getAdultMass();
+        return {
+          categoryLabel: "Кобыла: " + label,
+          eValue,
+          massKg
+        };
+      }
+
+      if (value === "working") {
+        const eValue = parseFloat(document.getElementById("workingState").value);
+        const label = document.getElementById("workingState").selectedOptions[0].text;
+        const massKg = getAdultMass();
+        return {
+          categoryLabel: "Рабочая лошадь: " + label,
+          eValue,
+          massKg
+        };
+      }
+
+      if (value === "young") {
+        const young = getYoungMassAndE();
+
+        const ageLabel = document.getElementById("youngAge").selectedOptions[0].text;
+        const typeLabel = document.getElementById("youngType").selectedOptions[0].text;
+
+        return {
+          categoryLabel: "Молодняк: " + ageLabel + ", " + typeLabel,
+          eValue: young.eValue,
+          massKg: young.massKg
+        };
+      }
+
+      throw new Error("Не удалось определить категорию.");
+    }
+
+    function renderResult(categoryLabel, massKg, eValue, dValue, hayKg, oatsKg) {
+      document.getElementById("resultCategory").textContent = categoryLabel;
+      document.getElementById("resultMass").textContent = massKg + " кг";
+      document.getElementById("resultE").textContent = eValue + " кг";
+      document.getElementById("resultD").textContent = dValue + " кг/сутки";
+      document.getElementById("resultHay").textContent = hayKg + " кг";
+      document.getElementById("resultOats").textContent = oatsKg + " кг";
+
+      resultBox.classList.remove("hidden");
+    }
+
+    category.addEventListener("change", () => {
+      updateCategoryUI();
+      clearError();
+      resultBox.classList.add("hidden");
+
+      if (category.value === "young") {
+        const age = document.getElementById("youngAge").value;
+        const type = document.getElementById("youngType").value;
+        if (age && type) {
+          const mass = YOUNG_MASS[type][age];
+          youngMassInfo.textContent = "Для выбранного молодняка будет автоматически использована живая масса: " + mass + " кг.";
+          youngMassInfo.classList.remove("hidden");
+        }
+      }
+    });
+
+    massMode.addEventListener("change", () => {
+      updateMassModeUI();
+      clearError();
+      resultBox.classList.add("hidden");
+    });
+
+    document.getElementById("youngAge").addEventListener("change", updateYoungInfo);
+    document.getElementById("youngType").addEventListener("change", updateYoungInfo);
+
+    function updateYoungInfo() {
+      clearError();
+      resultBox.classList.add("hidden");
+
+      const age = document.getElementById("youngAge").value;
+      const type = document.getElementById("youngType").value;
+
+      if (category.value === "young" && age && type) {
+        const mass = YOUNG_MASS[type][age];
+        youngMassInfo.textContent = "Для выбранного молодняка будет автоматически использована живая масса: " + mass + " кг.";
+        youngMassInfo.classList.remove("hidden");
+      } else {
+        youngMassInfo.textContent = "";
+        youngMassInfo.classList.add("hidden");
+      }
+    }
+
+    toggleImageBtn.addEventListener("click", () => {
+      imageWrap.classList.toggle("hidden");
+    });
+
+    calculateBtn.addEventListener("click", () => {
+      clearError();
+
+      try {
+        const data = getCategoryData();
+        const dValue = calculateD(data.eValue, data.massKg);
+        const feeds = calculateFeedMasses(dValue);
+
+        renderResult(
+          data.categoryLabel,
+          data.massKg,
+          data.eValue,
+          dValue,
+          feeds.hayKg,
+          feeds.oatsKg
+        );
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+
+    updateCategoryUI();
+    updateMassModeUI();
+  </script>
+</body>
+</html>
