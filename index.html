@@ -189,16 +189,15 @@
          ========================= -->
     <div class="card">
       <h1>Калькулятор плана питания лошади</h1>
-      <p>
+       <p>
         Калькулятор рассчитывает массу лошади, суточную норму сухого вещества,
-        а также ориентировочное количество сена и овса в сутки.
+        а также ориентировочное количество выбранного фуража и концентрата в сутки.
       </p>
       <p class="small-text">
-        Базовая схема расчёта: 80 % фуража и 20 % концентратов;
-        сено — 80 % сухого вещества, овёс — 86 %.
+        Базовая схема расчёта: 80 % фуража и 20 % концентратов.
       </p>
       <p class="small-text">
-        Поддержка других кормов находится в разработке.
+        Доступны разные варианты кормов: сено, сенаж, овёс, ячмень, гранулированный корм и свекловичный жом.
       </p>
     </div>
 
@@ -406,6 +405,38 @@
       <div id="youngMassInfo" class="hidden success"></div>
     </div>
 
+<!-- =========================
+     БЛОК 4.5. ВЫБОР КОРМОВ
+     ========================= -->
+<div class="card">
+  <h2>3. Выбор кормов</h2>
+
+  <div class="grid grid-2">
+    <div>
+      <label for="forageFeed">Основной фураж</label>
+      <select id="forageFeed">
+        <option value="hay">Сено</option>
+        <option value="haylage">Сенаж</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="concentrateFeed">Концентрат / дополнительный корм</label>
+      <select id="concentrateFeed">
+        <option value="oats">Овёс</option>
+        <option value="barley">Ячмень</option>
+        <option value="pellet">Гранулированный корм</option>
+        <option value="beetPulp">Свекловичный жом</option>
+      </select>
+    </div>
+  </div>
+
+  <p class="small-text">
+    Базовая схема расчёта сохраняется: 80 % фуража и 20 % концентратов.
+    Значения сухого вещества используются как ориентировочные.
+  </p>
+</div>
+    
     <!-- =========================
          БЛОК 5. РЕЗУЛЬТАТ
          ========================= -->
@@ -443,15 +474,15 @@
           <div id="resultD"></div>
         </div>
 
-        <div class="result-row">
-          <div class="result-label">Сено в сутки</div>
-          <div id="resultHay"></div>
-        </div>
+<div class="result-row">
+  <div class="result-label">Выбранный фураж в сутки</div>
+  <div id="resultHay"></div>
+</div>
 
-        <div class="result-row">
-          <div class="result-label">Овёс в сутки</div>
-          <div id="resultOats"></div>
-        </div>
+<div class="result-row">
+  <div class="result-label">Выбранный концентрат в сутки</div>
+  <div id="resultOats"></div>
+</div>
 
         <div class="note">
           Расчёт ориентировочный. Он не заменяет консультацию ветеринара, зоотехника или специалиста по кормлению.
@@ -464,10 +495,41 @@
     /* =========================
        БЛОК 6. КОНСТАНТЫ
        ========================= */
-    const DRY_MATTER_HAY = 0.80;
-    const DRY_MATTER_OATS = 0.86;
-    const FRACTION_FORAGE = 0.80;
-    const FRACTION_CONCENTRATES = 0.20;
+const FRACTION_FORAGE = 0.80;
+const FRACTION_CONCENTRATES = 0.20;
+
+const FEEDS = {
+  hay: {
+    name: "Сено",
+    dm: 0.80,
+    type: "forage"
+  },
+  haylage: {
+    name: "Сенаж",
+    dm: 0.55,
+    type: "forage"
+  },
+  oats: {
+    name: "Овёс",
+    dm: 0.86,
+    type: "concentrate"
+  },
+  barley: {
+    name: "Ячмень",
+    dm: 0.86,
+    type: "concentrate"
+  },
+  pellet: {
+    name: "Гранулированный корм",
+    dm: 0.90,
+    type: "concentrate"
+  },
+  beetPulp: {
+    name: "Свекловичный жом",
+    dm: 0.90,
+    type: "concentrate"
+  }
+};
 
     /* =========================
        БЛОК 7. ТАБЛИЦЫ МОЛОДНЯКА
@@ -526,6 +588,10 @@
     const warningBox = document.getElementById("warningBox");
     const resultBox = document.getElementById("resultBox");
 
+    const forageFeed = document.getElementById("forageFeed");
+    const concentrateFeed = document.getElementById("concentrateFeed");
+
+    
     /* =========================
        БЛОК 9. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
        ========================= */
@@ -668,11 +734,20 @@
       return round2(((eValue * massKg) / 100) * modifier);
     }
 
-    function calculateFeedMasses(dryMatterKg) {
-      const hayKg = round2((dryMatterKg * FRACTION_FORAGE) / DRY_MATTER_HAY);
-      const oatsKg = round2((dryMatterKg * FRACTION_CONCENTRATES) / DRY_MATTER_OATS);
-      return { hayKg, oatsKg };
-    }
+function calculateFeedMasses(dryMatterKg, forageKey, concentrateKey) {
+  const selectedForage = FEEDS[forageKey];
+  const selectedConcentrate = FEEDS[concentrateKey];
+
+  const forageKg = round2((dryMatterKg * FRACTION_FORAGE) / selectedForage.dm);
+  const concentrateKg = round2((dryMatterKg * FRACTION_CONCENTRATES) / selectedConcentrate.dm);
+
+  return {
+    forageKg,
+    concentrateKg,
+    forageName: selectedForage.name,
+    concentrateName: selectedConcentrate.name
+  };
+}
 
     /* =========================
        БЛОК 12. ПОЛУЧЕНИЕ МАССЫ
@@ -844,17 +919,17 @@
     /* =========================
        БЛОК 14. ВЫВОД РЕЗУЛЬТАТА
        ========================= */
-    function renderResult(categoryLabel, horseType, massKg, eValue, dValue, hayKg, oatsKg) {
-      document.getElementById("resultCategory").textContent = categoryLabel;
-      document.getElementById("resultHorseType").textContent = getHorseTypeLabel(horseType);
-      document.getElementById("resultMass").textContent = massKg + " кг";
-      document.getElementById("resultE").textContent = eValue + " кг";
-      document.getElementById("resultD").textContent = dValue + " кг/сутки";
-      document.getElementById("resultHay").textContent = hayKg + " кг";
-      document.getElementById("resultOats").textContent = oatsKg + " кг";
+function renderResult(categoryLabel, horseType, massKg, eValue, dValue, forageKg, concentrateKg, forageName, concentrateName) {
+  document.getElementById("resultCategory").textContent = categoryLabel;
+  document.getElementById("resultHorseType").textContent = getHorseTypeLabel(horseType);
+  document.getElementById("resultMass").textContent = massKg + " кг";
+  document.getElementById("resultE").textContent = eValue + " кг";
+  document.getElementById("resultD").textContent = dValue + " кг/сутки";
+  document.getElementById("resultHay").textContent = forageName + ": " + forageKg + " кг";
+  document.getElementById("resultOats").textContent = concentrateName + ": " + concentrateKg + " кг";
 
-      resultBox.classList.remove("hidden");
-    }
+  resultBox.classList.remove("hidden");
+}
 
     /* =========================
        БЛОК 15. СОБЫТИЯ
@@ -892,32 +967,43 @@
     });
 
     calculateBtn.addEventListener("click", () => {
-      clearError();
-      clearWarning();
+  clearError();
+  clearWarning();
 
-      try {
-        const data = getCategoryData();
-        const horseType = document.getElementById("horseType").value;
-        const dValue = calculateD(data.eValue, data.massKg, data.modifier || 1);
-        const feeds = calculateFeedMasses(dValue);
+  try {
+    const data = getCategoryData();
+    const horseType = document.getElementById("horseType").value;
 
-        renderResult(
-          data.categoryLabel,
-          horseType,
-          data.massKg,
-          data.eValue,
-          dValue,
-          feeds.hayKg,
-          feeds.oatsKg
-        );
+    const selectedForageKey = forageFeed.value;
+    const selectedConcentrateKey = concentrateFeed.value;
 
-        if (data.warning) {
-          showWarning(data.warning);
-        }
-      } catch (error) {
-        showError(error.message);
-      }
-    });
+    const dValue = calculateD(data.eValue, data.massKg, data.modifier || 1);
+
+    const feeds = calculateFeedMasses(
+      dValue,
+      selectedForageKey,
+      selectedConcentrateKey
+    );
+
+    renderResult(
+      data.categoryLabel,
+      horseType,
+      data.massKg,
+      data.eValue,
+      dValue,
+      feeds.forageKg,
+      feeds.concentrateKg,
+      feeds.forageName,
+      feeds.concentrateName
+    );
+
+    if (data.warning) {
+      showWarning(data.warning);
+    }
+  } catch (error) {
+    showError(error.message);
+  }
+});
 
     /* =========================
        БЛОК 16. СТАРТОВАЯ ИНИЦИАЛИЗАЦИЯ
