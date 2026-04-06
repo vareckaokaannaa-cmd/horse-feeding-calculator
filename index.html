@@ -146,6 +146,12 @@
       margin-top: 12px;
     }
 
+    .warning {
+      color: #8a5a00;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
     .success {
       color: #1b5e20;
       font-weight: 600;
@@ -194,6 +200,11 @@
             <option value="mare">Кобыла</option>
             <option value="working">Рабочая лошадь</option>
             <option value="young">Молодняк</option>
+            <option value="gelding">Мерин</option>
+            <option value="easy_keeper">Пони / easy keeper</option>
+            <option value="laminitis_ems">Лошадь с риском ламинита / EMS</option>
+            <option value="sport">Спортивная лошадь</option>
+            <option value="senior">Пожилая лошадь / senior</option>
           </select>
         </div>
 
@@ -241,6 +252,52 @@
             <option value="">-- выберите группу --</option>
             <option value="riding_trotting">Рысистые и верховые породы</option>
             <option value="heavy">Тяжеловозные породы</option>
+          </select>
+        </div>
+
+        <div id="geldingBox" class="hidden">
+          <label for="geldingState">Нагрузка мерина</label>
+          <select id="geldingState">
+            <option value="2.2">Без работы</option>
+            <option value="2.5">Лёгкая работа</option>
+            <option value="2.8">Средняя работа</option>
+            <option value="3.0">Тяжёлая работа</option>
+          </select>
+        </div>
+
+        <div id="easyKeeperBox" class="hidden">
+          <label for="easyKeeperState">Нагрузка</label>
+          <select id="easyKeeperState">
+            <option value="2.2">Без работы</option>
+            <option value="2.5">Лёгкая работа</option>
+            <option value="2.8">Средняя работа</option>
+            <option value="3.0">Тяжёлая работа</option>
+          </select>
+        </div>
+
+        <div id="laminitisBox" class="hidden">
+          <label for="laminitisState">Нагрузка</label>
+          <select id="laminitisState">
+            <option value="2.2">Без работы</option>
+            <option value="2.5">Лёгкая работа</option>
+            <option value="2.8">Средняя работа</option>
+          </select>
+        </div>
+
+        <div id="sportBox" class="hidden">
+          <label for="sportState">Уровень тренинга</label>
+          <select id="sportState">
+            <option value="2.5">Лёгкий тренинг</option>
+            <option value="2.8">Регулярный тренинг</option>
+            <option value="3.0">Интенсивный тренинг</option>
+          </select>
+        </div>
+
+        <div id="seniorBox" class="hidden">
+          <label for="seniorState">Состояние пожилой лошади</label>
+          <select id="seniorState">
+            <option value="2.2">Нормальная кондиция</option>
+            <option value="2.5">Нуждается в поддержке веса</option>
           </select>
         </div>
       </div>
@@ -311,6 +368,7 @@
       <button type="button" class="btn-primary" id="calculateBtn">Рассчитать</button>
 
       <div id="errorBox" class="error hidden"></div>
+      <div id="warningBox" class="warning hidden"></div>
 
       <div id="resultBox" class="result-box hidden" style="margin-top: 16px;">
         <div class="result-row">
@@ -382,6 +440,12 @@
     const adultMassBox = document.getElementById("adultMassBox");
     const youngMassInfo = document.getElementById("youngMassInfo");
 
+    const geldingBox = document.getElementById("geldingBox");
+    const easyKeeperBox = document.getElementById("easyKeeperBox");
+    const laminitisBox = document.getElementById("laminitisBox");
+    const sportBox = document.getElementById("sportBox");
+    const seniorBox = document.getElementById("seniorBox");
+
     const massMode = document.getElementById("massMode");
     const manualMassWrap = document.getElementById("manualMassWrap");
     const measurementWrap = document.getElementById("measurementWrap");
@@ -391,6 +455,7 @@
 
     const calculateBtn = document.getElementById("calculateBtn");
     const errorBox = document.getElementById("errorBox");
+    const warningBox = document.getElementById("warningBox");
     const resultBox = document.getElementById("resultBox");
 
     function hideAllCategoryBoxes() {
@@ -399,6 +464,11 @@
       workingBox.classList.add("hidden");
       youngAgeBox.classList.add("hidden");
       youngTypeBox.classList.add("hidden");
+      geldingBox.classList.add("hidden");
+      easyKeeperBox.classList.add("hidden");
+      laminitisBox.classList.add("hidden");
+      sportBox.classList.add("hidden");
+      seniorBox.classList.add("hidden");
     }
 
     function updateCategoryUI() {
@@ -421,6 +491,21 @@
         youngAgeBox.classList.remove("hidden");
         youngTypeBox.classList.remove("hidden");
         adultMassBox.classList.add("hidden");
+      } else if (value === "gelding") {
+        geldingBox.classList.remove("hidden");
+        adultMassBox.classList.remove("hidden");
+      } else if (value === "easy_keeper") {
+        easyKeeperBox.classList.remove("hidden");
+        adultMassBox.classList.remove("hidden");
+      } else if (value === "laminitis_ems") {
+        laminitisBox.classList.remove("hidden");
+        adultMassBox.classList.remove("hidden");
+      } else if (value === "sport") {
+        sportBox.classList.remove("hidden");
+        adultMassBox.classList.remove("hidden");
+      } else if (value === "senior") {
+        seniorBox.classList.remove("hidden");
+        adultMassBox.classList.remove("hidden");
       } else {
         adultMassBox.classList.remove("hidden");
       }
@@ -451,8 +536,8 @@
       return round2(mass);
     }
 
-    function calculateD(eValue, massKg) {
-      return round2((eValue * massKg) / 100);
+    function calculateD(eValue, massKg, modifier = 1) {
+      return round2(((eValue * massKg) / 100) * modifier);
     }
 
     function calculateFeedMasses(dryMatterKg) {
@@ -474,6 +559,16 @@
     function clearError() {
       errorBox.textContent = "";
       errorBox.classList.add("hidden");
+    }
+
+    function showWarning(message) {
+      warningBox.textContent = message;
+      warningBox.classList.remove("hidden");
+    }
+
+    function clearWarning() {
+      warningBox.textContent = "";
+      warningBox.classList.add("hidden");
     }
 
     function getAdultMass() {
@@ -529,38 +624,25 @@
         const eValue = parseFloat(document.getElementById("stallionState").value);
         const label = document.getElementById("stallionState").selectedOptions[0].text;
         const massKg = getAdultMass();
-        return {
-          categoryLabel: "Жеребец-производитель: " + label,
-          eValue,
-          massKg
-        };
+        return { categoryLabel: "Жеребец-производитель: " + label, eValue, massKg };
       }
 
       if (value === "mare") {
         const eValue = parseFloat(document.getElementById("mareState").value);
         const label = document.getElementById("mareState").selectedOptions[0].text;
         const massKg = getAdultMass();
-        return {
-          categoryLabel: "Кобыла: " + label,
-          eValue,
-          massKg
-        };
+        return { categoryLabel: "Кобыла: " + label, eValue, massKg };
       }
 
       if (value === "working") {
         const eValue = parseFloat(document.getElementById("workingState").value);
         const label = document.getElementById("workingState").selectedOptions[0].text;
         const massKg = getAdultMass();
-        return {
-          categoryLabel: "Рабочая лошадь: " + label,
-          eValue,
-          massKg
-        };
+        return { categoryLabel: "Рабочая лошадь: " + label, eValue, massKg };
       }
 
       if (value === "young") {
         const young = getYoungMassAndE();
-
         const ageLabel = document.getElementById("youngAge").selectedOptions[0].text;
         const typeLabel = document.getElementById("youngType").selectedOptions[0].text;
 
@@ -568,6 +650,66 @@
           categoryLabel: "Молодняк: " + ageLabel + ", " + typeLabel,
           eValue: young.eValue,
           massKg: young.massKg
+        };
+      }
+
+      if (value === "gelding") {
+        const eValue = parseFloat(document.getElementById("geldingState").value);
+        const label = document.getElementById("geldingState").selectedOptions[0].text;
+        const massKg = getAdultMass();
+        return { categoryLabel: "Мерин: " + label, eValue, massKg };
+      }
+
+      if (value === "easy_keeper") {
+        const eValue = parseFloat(document.getElementById("easyKeeperState").value);
+        const label = document.getElementById("easyKeeperState").selectedOptions[0].text;
+        const massKg = getAdultMass();
+
+        return {
+          categoryLabel: "Пони / easy keeper: " + label,
+          eValue,
+          massKg,
+          modifier: 0.9,
+          warning: "Для пони и easy keeper-лошадей часто требуется более осторожный расчёт рациона и контроль кондиции."
+        };
+      }
+
+      if (value === "laminitis_ems") {
+        const eValue = parseFloat(document.getElementById("laminitisState").value);
+        const label = document.getElementById("laminitisState").selectedOptions[0].text;
+        const massKg = getAdultMass();
+
+        return {
+          categoryLabel: "Лошадь с риском ламинита / EMS: " + label,
+          eValue,
+          massKg,
+          modifier: 0.9,
+          warning: "Для лошадей с риском ламинита и EMS особенно важны контроль массы тела, осторожное использование пастбища и подбор кормов с низким содержанием сахара и крахмала."
+        };
+      }
+
+      if (value === "sport") {
+        const eValue = parseFloat(document.getElementById("sportState").value);
+        const label = document.getElementById("sportState").selectedOptions[0].text;
+        const massKg = getAdultMass();
+
+        return {
+          categoryLabel: "Спортивная лошадь: " + label,
+          eValue,
+          massKg
+        };
+      }
+
+      if (value === "senior") {
+        const eValue = parseFloat(document.getElementById("seniorState").value);
+        const label = document.getElementById("seniorState").selectedOptions[0].text;
+        const massKg = getAdultMass();
+
+        return {
+          categoryLabel: "Пожилая лошадь / senior: " + label,
+          eValue,
+          massKg,
+          warning: "Для пожилых лошадей важно учитывать состояние зубов, способность пережёвывать корм и поддержание нормальной кондиции."
         };
       }
 
@@ -588,6 +730,7 @@
     category.addEventListener("change", () => {
       updateCategoryUI();
       clearError();
+      clearWarning();
       resultBox.classList.add("hidden");
 
       if (category.value === "young") {
@@ -604,6 +747,7 @@
     massMode.addEventListener("change", () => {
       updateMassModeUI();
       clearError();
+      clearWarning();
       resultBox.classList.add("hidden");
     });
 
@@ -612,6 +756,7 @@
 
     function updateYoungInfo() {
       clearError();
+      clearWarning();
       resultBox.classList.add("hidden");
 
       const age = document.getElementById("youngAge").value;
@@ -633,10 +778,11 @@
 
     calculateBtn.addEventListener("click", () => {
       clearError();
+      clearWarning();
 
       try {
         const data = getCategoryData();
-        const dValue = calculateD(data.eValue, data.massKg);
+        const dValue = calculateD(data.eValue, data.massKg, data.modifier || 1);
         const feeds = calculateFeedMasses(dValue);
 
         renderResult(
@@ -647,6 +793,10 @@
           feeds.hayKg,
           feeds.oatsKg
         );
+
+        if (data.warning) {
+          showWarning(data.warning);
+        }
       } catch (error) {
         showError(error.message);
       }
