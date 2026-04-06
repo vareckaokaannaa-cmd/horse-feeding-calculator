@@ -196,9 +196,9 @@
       <p class="small-text">
         Базовая схема расчёта: 80 % фуража и 20 % концентратов.
       </p>
-      <p class="small-text">
-        Доступны разные варианты кормов: сено, сенаж, овёс, ячмень, гранулированный корм и свекловичный жом.
-      </p>
+<p class="small-text">
+  Доступны: сено, сенаж, свежая трава / пастбище, овёс, ячмень, гранулированный корм, свекловичный жом и вариант без концентрата.
+</p>
     </div>
 
     <!-- =========================
@@ -414,20 +414,22 @@
   <div class="grid grid-2">
     <div>
       <label for="forageFeed">Основной фураж</label>
-      <select id="forageFeed">
+<select id="forageFeed">
         <option value="hay">Сено</option>
         <option value="haylage">Сенаж</option>
+        <option value="grass">Свежая трава / пастбище</option>
       </select>
     </div>
 
     <div>
       <label for="concentrateFeed">Концентрат / дополнительный корм</label>
-      <select id="concentrateFeed">
-        <option value="oats">Овёс</option>
-        <option value="barley">Ячмень</option>
-        <option value="pellet">Гранулированный корм</option>
-        <option value="beetPulp">Свекловичный жом</option>
-      </select>
+<select id="concentrateFeed">
+  <option value="none">Без концентрата</option>
+  <option value="oats">Овёс</option>
+  <option value="barley">Ячмень</option>
+  <option value="pellet">Гранулированный корм</option>
+  <option value="beetPulp">Свекловичный жом</option>
+</select>
     </div>
   </div>
 
@@ -501,13 +503,23 @@ const FRACTION_CONCENTRATES = 0.20;
 const FEEDS = {
   hay: {
     name: "Сено",
-    dm: 0.80,
+    dm: 0.85,
     type: "forage"
   },
   haylage: {
     name: "Сенаж",
     dm: 0.55,
     type: "forage"
+  },
+  grass: {
+    name: "Свежая трава / пастбище",
+    dm: 0.18,
+    type: "forage"
+  },
+  none: {
+    name: "Без концентрата",
+    dm: 1,
+    type: "concentrate"
   },
   oats: {
     name: "Овёс",
@@ -738,8 +750,14 @@ function calculateFeedMasses(dryMatterKg, forageKey, concentrateKey) {
   const selectedForage = FEEDS[forageKey];
   const selectedConcentrate = FEEDS[concentrateKey];
 
+  // масса фуража
   const forageKg = round2((dryMatterKg * FRACTION_FORAGE) / selectedForage.dm);
-  const concentrateKg = round2((dryMatterKg * FRACTION_CONCENTRATES) / selectedConcentrate.dm);
+
+  // масса концентрата: если выбран "none", не добавляем концентрат
+  let concentrateKg = 0;
+  if (concentrateKey !== "none") {
+    concentrateKg = round2((dryMatterKg * FRACTION_CONCENTRATES) / selectedConcentrate.dm);
+  }
 
   return {
     forageKg,
@@ -966,7 +984,7 @@ function renderResult(categoryLabel, horseType, massKg, eValue, dValue, forageKg
       imageWrap.classList.toggle("hidden");
     });
 
-    calculateBtn.addEventListener("click", () => {
+calculateBtn.addEventListener("click", () => {
   clearError();
   clearWarning();
 
@@ -997,8 +1015,19 @@ function renderResult(categoryLabel, horseType, massKg, eValue, dValue, forageKg
       feeds.concentrateName
     );
 
+    // Собираем предупреждения
+    let warningText = "";
     if (data.warning) {
-      showWarning(data.warning);
+      warningText += data.warning;
+    }
+    if (selectedForageKey === "grass") {
+      if (warningText) {
+        warningText += "\n";
+      }
+      warningText += "Для свежей травы / пастбища расчёт особенно ориентировочный.";
+    }
+    if (warningText) {
+      showWarning(warningText);
     }
   } catch (error) {
     showError(error.message);
