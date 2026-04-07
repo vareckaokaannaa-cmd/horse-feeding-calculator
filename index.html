@@ -618,6 +618,7 @@ const FEEDS = {
     const resultBox = document.getElementById("resultBox");
 
     const forageFeed = document.getElementById("forageFeed");
+    const season = document.getElementById("season");
     const concentrateFeed = document.getElementById("concentrateFeed");
 
     
@@ -763,14 +764,14 @@ const FEEDS = {
       return round2(((eValue * massKg) / 100) * modifier);
     }
 
-function calculateFeedMasses(dryMatterKg, forageKey, concentrateKey) {
+function calculateFeedMasses(dryMatterKg, forageKey, concentrateKey, seasonKey) {
   const selectedForage = FEEDS[forageKey];
   const selectedConcentrate = FEEDS[concentrateKey];
 
-  // масса фуража
+  // масса фуража (вес корма, кг)
   const forageKg = round2((dryMatterKg * FRACTION_FORAGE) / selectedForage.dm);
 
-  // масса концентрата: если выбран "none", не добавляем концентрат
+  // масса концентрата (если выбран "none", то 0)
   let concentrateKg = 0;
   if (concentrateKey !== "none") {
     concentrateKg = round2((dryMatterKg * FRACTION_CONCENTRATES) / selectedConcentrate.dm);
@@ -781,14 +782,15 @@ function calculateFeedMasses(dryMatterKg, forageKey, concentrateKey) {
   if (forageKey === 'grass') {
     const forageDM = dryMatterKg * FRACTION_FORAGE;
     const intakePerHour = PASTURE_DM_PER_HOUR[seasonKey];
-    forageHours = round2(forageDM / intakePerHour); // часов пастьбы
+    forageHours = round2(forageDM / intakePerHour);
   }
 
   return {
     forageKg,
     concentrateKg,
     forageName: selectedForage.name,
-    concentrateName: selectedConcentrate.name
+    concentrateName: selectedConcentrate.name,
+    forageHours               // возвращаем часы пастбища
   };
 }
 
@@ -1028,17 +1030,17 @@ calculateBtn.addEventListener("click", () => {
     const horseType = document.getElementById("horseType").value;
 
     const selectedForageKey = forageFeed.value;
-    const selectedConcentrateKey = concentrateFeed.value;
-    const seasonKey = document.getElementById('season').value; // берём сезон из выпадающего списка
+const selectedConcentrateKey = concentrateFeed.value;
+const seasonKey = season.value;  // получить выбранный сезон
 
-    const dValue = calculateD(data.eValue, data.massKg, data.modifier || 1);
+const dValue = calculateD(data.eValue, data.massKg, data.modifier || 1);
 
-    const feeds = calculateFeedMasses(
-      dValue,
-      selectedForageKey,
-      selectedConcentrateKey
-      seasonKey        // передаём сезон в функцию
-    );
+const feeds = calculateFeedMasses(
+  dValue,
+  selectedForageKey,
+  selectedConcentrateKey,
+  seasonKey         // передаём сезон
+);
 
 renderResult(
   data.categoryLabel,
@@ -1050,7 +1052,7 @@ renderResult(
   feeds.concentrateKg,
   feeds.forageName,
   feeds.concentrateName,
-  feeds.forageHours
+  feeds.forageHours   // передаём часы пастбища
 );
 
     // Собираем предупреждения
